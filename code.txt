@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Language Learning App</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #007bff;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+    }
+    select, button, input {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+    .flashcard, .quiz, .progress {
+      background: white;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .category-buttons button {
+      margin-right: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Language Learning App</h1>
+  </header>
+  <div class="container">
+    <label for="language">Choose Language:</label>
+    <select id="language">
+      <option value="spanish">Spanish</option>
+      <option value="french">French</option>
+    </select>
+
+    <div class="category-buttons">
+      <button onclick="showSection('flashcard')">Daily Flashcard</button>
+      <button onclick="showSection('vocab')">Vocabulary</button>
+      <button onclick="showSection('grammar')">Grammar</button>
+      <button onclick="showSection('quiz')">Quiz</button>
+      <button onclick="showSection('progress')">Progress</button>
+    </div>
+
+    <div id="flashcard" class="flashcard hidden">
+      <h2>Flashcard of the Day</h2>
+      <p id="word"></p>
+      <p><button onclick="playAudio()">🔊 Pronounce</button></p>
+    </div>
+
+    <div id="vocab" class="flashcard hidden">
+      <h2>Vocabulary List</h2>
+      <ul id="vocabList"></ul>
+    </div>
+
+    <div id="grammar" class="flashcard hidden">
+      <h2>Grammar Tips</h2>
+      <p id="grammarTips"></p>
+    </div>
+
+    <div id="quiz" class="quiz hidden">
+      <h2>Quiz</h2>
+      <p id="quizQuestion"></p>
+      <input type="text" id="quizAnswer" placeholder="Your answer">
+      <button onclick="checkAnswer()">Submit</button>
+      <p id="quizResult"></p>
+    </div>
+
+    <div id="progress" class="progress hidden">
+      <h2>Your Progress</h2>
+      <p id="progressData"></p>
+    </div>
+  </div>
+
+  <script>
+    const data = {
+      spanish: {
+        words: [
+          { word: "Hola", translation: "Hello", audio: "https://ssl.gstatic.com/dictionary/static/sounds/20200429/hola--_es_1.mp3" },
+          { word: "Gracias", translation: "Thank you", audio: "https://ssl.gstatic.com/dictionary/static/sounds/20200429/gracias--_es_1.mp3" },
+        ],
+        grammar: "In Spanish, nouns have genders. For example, 'el libro' (the book) is masculine.",
+        quiz: { question: "Translate 'Hello' to Spanish.", answer: "Hola" }
+      },
+      french: {
+        words: [
+          { word: "Bonjour", translation: "Hello", audio: "https://ssl.gstatic.com/dictionary/static/sounds/20200429/bonjour--_fr_1.mp3" },
+          { word: "Merci", translation: "Thank you", audio: "https://ssl.gstatic.com/dictionary/static/sounds/20200429/merci--_fr_1.mp3" },
+        ],
+        grammar: "French nouns also have gender. 'La table' (the table) is feminine.",
+        quiz: { question: "Translate 'Thank you' to French.", answer: "Merci" }
+      }
+    };
+
+    let currentLang = "spanish";
+    let flashcardIndex = 0;
+
+    function showSection(section) {
+      document.querySelectorAll('.flashcard, .quiz, .progress').forEach(el => el.classList.add('hidden'));
+
+      if (section === 'flashcard') {
+        loadFlashcard();
+      } else if (section === 'vocab') {
+        loadVocab();
+      } else if (section === 'grammar') {
+        loadGrammar();
+      } else if (section === 'quiz') {
+        loadQuiz();
+      } else if (section === 'progress') {
+        loadProgress();
+      }
+
+      document.getElementById(section).classList.remove('hidden');
+    }
+
+    document.getElementById("language").addEventListener("change", () => {
+      currentLang = document.getElementById("language").value;
+      localStorage.setItem("lang", currentLang);
+    });
+
+    function loadFlashcard() {
+      const wordObj = data[currentLang].words[flashcardIndex % data[currentLang].words.length];
+      document.getElementById("word").innerHTML = `<strong>${wordObj.word}</strong> - ${wordObj.translation}`;
+    }
+
+    function playAudio() {
+      const wordObj = data[currentLang].words[flashcardIndex % data[currentLang].words.length];
+      const audio = new Audio(wordObj.audio);
+      audio.play();
+    }
+
+    function loadVocab() {
+      const list = document.getElementById("vocabList");
+      list.innerHTML = "";
+      data[currentLang].words.forEach(w => {
+        const li = document.createElement("li");
+        li.textContent = `${w.word} - ${w.translation}`;
+        list.appendChild(li);
+      });
+    }
+
+    function loadGrammar() {
+      document.getElementById("grammarTips").textContent = data[currentLang].grammar;
+    }
+
+    function loadQuiz() {
+      document.getElementById("quizQuestion").textContent = data[currentLang].quiz.question;
+      document.getElementById("quizAnswer").value = "";
+      document.getElementById("quizResult").textContent = "";
+    }
+
+    function checkAnswer() {
+      const userAns = document.getElementById("quizAnswer").value.trim();
+      const correct = data[currentLang].quiz.answer;
+      const resultEl = document.getElementById("quizResult");
+      if (userAns.toLowerCase() === correct.toLowerCase()) {
+        resultEl.textContent = "✅ Correct!";
+        updateProgress();
+      } else {
+        resultEl.textContent = `❌ Incorrect. Correct answer: ${correct}`;
+      }
+    }
+
+    function updateProgress() {
+      let progress = JSON.parse(localStorage.getItem("progress")) || {};
+      progress[currentLang] = (progress[currentLang] || 0) + 1;
+      localStorage.setItem("progress", JSON.stringify(progress));
+    }
+
+    function loadProgress() {
+      const progress = JSON.parse(localStorage.getItem("progress")) || {};
+      const value = progress[currentLang] || 0;
+      document.getElementById("progressData").textContent = `You have answered ${value} quizzes correctly in ${currentLang}.`;
+    }
+
+    // Load initial language from localStorage
+    if (localStorage.getItem("lang")) {
+      currentLang = localStorage.getItem("lang");
+      document.getElementById("language").value = currentLang;
+    }
+  </script>
+</body>
+</html>

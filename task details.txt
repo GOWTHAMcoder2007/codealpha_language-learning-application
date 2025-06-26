@@ -1,0 +1,7 @@
+TASK 4: Language Learning App
+Build an interactive language learning app:
+● The app should help users learn new words, phrases, or sentences in a selected language.
+● Include daily lessons or flashcards with translations and pronunciations.
+● Users can take quizzes or practice tests to check their learning progress.
+● The app should have a clean and intuitive UI, with categories like vocabulary, grammar etc.
+● Learning data can be stored locally or synced using a backend like Fire
